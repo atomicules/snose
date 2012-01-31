@@ -166,12 +166,12 @@ def sync(snclient):
 				#Also update .snose index
 				snose[name]['syncnum'] = remote[0]['syncnum']
 				snose[name]['version'] = remote[0]['version']
-				snose[name]['modifydate'] = remote[0]['modifydate']
+				snose[name]['modifydate'] = os.path.getmtime(name) #As if set remote modify date, local file will immediately appear 'modified'
 				try:
 					with open('.snose', 'w') as f:
 						json.dump(snose, f, indent=2)
 				except IOError as e:
-					print 'Failed to update index'')'
+					print 'Failed to update index'
 				#Some feedback
 				print "Updated local version of "+ name
 			except IOError as e:
