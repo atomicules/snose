@@ -147,20 +147,34 @@ def sync(snclient, dry=False):
 		#First of all check for local modifications
 		if float(os.path.getmtime(name)) > float(local['modifydate']): #ensure full timestamp
 			if not dry:
-				#Update remote
+			#Update remote
 				with open(name, 'r') as f:
 					content = f.read()
-				returned = snclient.update_note({'key': local['key'], 'content': content })
-				#Update Index
+				returned = snclient.update_note({'key': local['key'], 'version': local['version'], 'content': content })
+				#Get returned metadata
 				snose[name]['syncnum'] = returned[0]['syncnum']
 				snose[name]['version'] = returned[0]['version']
 				snose[name]['modifydate'] = returned[0]['modifydate']
+				#Update local file if merged content
+				if 'content' in returned[0]:
+					try:
+						with open(name, 'w') as f:
+							f.write(returned[0]['content'])
+						#Override the returned value? As otherwise next sync will immediately update the remote version for no reason.
+						snose[name]['modifydate'] = os.path.getmtime(name) 
+						success = True
+					except IOError as e:
+						print "Failed to merge content for "+ name
+				if success:
+					print "Merging local content for "+ name
+				#Update the index file
+				success = False #reset
 				try:
 					with open('.snose', 'w') as f:
 						json.dump(snose, f, indent=2)
 					success = True
 				except IOError as e:
-					print 'Failed to update index'
+					print "Failed to update index"
 				#Give some feedback?
 			if dry or success:
 				print "Updated remote version of "+ name
@@ -170,6 +184,7 @@ def sync(snclient, dry=False):
 		remote = snclient.get_note(local['key'])
 		if remote[0]['syncnum'] > local['syncnum']:
 			if not dry:
+				success = False #reset
 				#update local file contents
 				try: 
 					with open(name, 'w') as f:
