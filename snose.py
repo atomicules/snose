@@ -9,10 +9,11 @@ from optparse import OptionParser
 def main():
 	parser = OptionParser()
 	parser.add_option("--snort", action="store", type="string", help="Import a new file to Simplenote")
-	parser.add_option("--sniff", action="store", nargs=2, type="string", help="Import an existing file to Simplenote", metavar="<key> <filename>")
+	parser.add_option("--sniff", action="store", nargs=2, type="string", help="Link a file with an already existing note in  Simplenote", metavar="<key> <filename>")
 	parser.add_option("--sneeze", action="store", nargs=2, type="string", help="Export an existing file from Simplenote", metavar="<key> <filename>")
 	parser.add_option("--sync", help="Sync files in index", default=False, action='store_true')
-	parser.add_option("--snot", help="List available notes", default=False, action='store_true')
+	parser.add_option("--hanky", help="Use with --sync to perform a dry run", default=False, action='store_true')
+	parser.add_option("--snot", help="List notes available for export (tagged snose)", default=False, action='store_true')
 	parser.add_option("--username", action="store", type="string", help="Your Simplenote email address")
 	parser.add_option("--password", action="store", type="string", help="Your Simplenote password")
 	(options, args) = parser.parse_args()
@@ -36,6 +37,8 @@ def main():
 		sneeze(snclient, options.sneeze[0], options.sneeze[1])
 	elif options.snot:
 		snot(snclient)
+	elif options.sync and options.hanky:
+		sync(snclient, True)
 	elif options.sync:
 		sync(snclient)
 	else:
@@ -129,8 +132,10 @@ def snot(snclient):
 			print remote[0]['key']  + "  " + remote[0]['content'].splitlines()[0]
 
 
-def sync(snclient):
+def sync(snclient, dry=False):
 	#Need to read in mappings and sync those notes.
+	success = False
+	dryremotes = []
 	try:
 		with open('.snose', 'r') as f:
 			snose = json.load(f)
@@ -141,41 +146,49 @@ def sync(snclient):
 	for name, local in snose.iteritems():
 		#First of all check for local modifications
 		if float(os.path.getmtime(name)) > float(local['modifydate']): #ensure full timestamp
-			#Update remote
-			with open(name, 'r') as f:
-				content = f.read()
-			returned = snclient.update_note({'key': local['key'], 'content': content })
-			#Update Index
-			snose[name]['syncnum'] = returned[0]['syncnum']
-			snose[name]['version'] = returned[0]['version']
-			snose[name]['modifydate'] = returned[0]['modifydate']
-			try:
-				with open('.snose', 'w') as f:
-					json.dump(snose, f, indent=2)
-			except IOError as e:
-				print 'Failed to update index'')'
-			#Give some feedback?
-			print "Updated remote version of "+ name
-		#Fetch details from Simplenote
-		remote = snclient.get_note(local['key'])
-		if remote[0]['syncnum'] > local['syncnum']:
-			#update local file contents
-			try: 
-				with open(name, 'w') as f:
-					f.write(remote[0]['content'])
-				#Also update .snose index
-				snose[name]['syncnum'] = remote[0]['syncnum']
-				snose[name]['version'] = remote[0]['version']
-				snose[name]['modifydate'] = remote[0]['modifydate']
+			if not dry:
+				#Update remote
+				with open(name, 'r') as f:
+					content = f.read()
+				returned = snclient.update_note({'key': local['key'], 'content': content })
+				#Update Index
+				snose[name]['syncnum'] = returned[0]['syncnum']
+				snose[name]['version'] = returned[0]['version']
+				snose[name]['modifydate'] = returned[0]['modifydate']
 				try:
 					with open('.snose', 'w') as f:
 						json.dump(snose, f, indent=2)
+					success = True
 				except IOError as e:
 					print 'Failed to update index'')'
-				#Some feedback
+				#Give some feedback?
+			if dry or success:
+				print "Updated remote version of "+ name
+				#For dry run, collect list of "updated remotes" to ignore in local updates
+				if dry: dryremotes.append(name)
+		#Fetch details from Simplenote
+		remote = snclient.get_note(local['key'])
+		if remote[0]['syncnum'] > local['syncnum']:
+			if not dry:
+				#update local file contents
+				try: 
+					with open(name, 'w') as f:
+						f.write(remote[0]['content'])
+					#Also update .snose index
+					snose[name]['syncnum'] = remote[0]['syncnum']
+					snose[name]['version'] = remote[0]['version']
+					snose[name]['modifydate'] = remote[0]['modifydate']
+					try:
+						with open('.snose', 'w') as f:
+							json.dump(snose, f, indent=2)
+						success = True
+					except IOError as e:
+						print 'Failed to update index'')'
+					#Some feedback
+				except IOError as e:
+					pass
+			if (dry and (not (name in dryremotes))) or success:
 				print "Updated local version of "+ name
-			except IOError as e:
-				pass
 
 
 main()
