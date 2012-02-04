@@ -70,10 +70,10 @@ It's really quite simple (after all, I've done it), basically it creates a `.sno
 
 It then just implements the Simplenote recommendation from the api:
 
-- Iterates through each file stored in the `.snose` index.
-- First of all looks for local modifications (compares modification date of the file with what is stored in the index). 
-- Then attempts to update the remote version on Simplenote, but will merge the content if the remote has also changed. If merging occurs both the local and remote are updated.
-- Then checks for remote updates by comparing version numbers and updates local copies if necessary.
+1. Iterates through each file stored in the `.snose` index.
+2. First of all looks for local modifications (compares modification date of the file with what is stored in the index). 
+3. Then attempts to update the remote version on Simplenote, but will merge the content if the remote has also changed. If merging occurs both the local and remote are updated.
+4. Then checks for remote updates by comparing version numbers and updates local copies if necessary.
 
 
 ##To Do
