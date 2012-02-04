@@ -47,7 +47,14 @@ Export a file from Simplenote to the current directory.
 
 ###Sync - Synchronise files
 
-Reads files in the `.snose` index file and synchronises them with Simplenote. You can pass the optional `--hanky` flag at the same time to perform a dry run; although the dry run can't indicate when merging will occur, only the ultimate direction of the update.
+Reads files in the `.snose` index file and synchronises them with Simplenote. 
+    
+	snose.py  --username=<me@email.com> --password=<mypassword> --sync
+
+You can pass the optional `--hanky` flag at the same time to perform a dry run; although the dry run can't indicate when merging will occur, only the ultimate direction of the update.
+
+    snose.py  --username=<me@email.com> --password=<mypassword> --sync --hanky
+
 
 ###Snot - List files available for synchronisation with SNose
 
