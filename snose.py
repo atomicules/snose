@@ -60,14 +60,24 @@ def snort(snclient,filename):
 	try:
 		with open(filename, 'r') as f:
 			content = f.read()
+	except IOError as e:
+		print "Failed to read file "+ filename
+		quit()
+	try:
 		returned = snclient.add_note({"content": content, "tags": ["snose"]})
+	except IOError as e:
+		print "Failed to add note to Simplenote"
+		print e
+		quit()
+	else:
 		#Add mapping
 		snose[filename] = {'key': returned[0]['key'], 'syncnum': returned[0]['syncnum'], 'version': returned[0]['version'], 'modifydate': returned[0]['modifydate'] }
+	try:
 		#Write back out
 		with open('.snose', 'w') as f:
 			json.dump(snose, f, indent=2)
 	except IOError as e:
-		pass
+		print "Failed to update .snose index file"
 
 def sniff(snclient,key, filename): #How to ensure remote gets or has snose tag?
 	# Add a new mapping only
@@ -78,8 +88,13 @@ def sniff(snclient,key, filename): #How to ensure remote gets or has snose tag?
 		#Doesn't exist so create new
 		snose = {}
 	#Get details about current Simplenote file
-	remote = snclient.get_note(key)
-	#What if can't be found, need to abort...
+	try:
+		remote = snclient.get_note(key)
+		#What if can't be found, need to abort...
+	except IOError as e:
+		print "Failed to find that note on Simplenote"
+		print e
+		quit()
 	try:
 		#Add mapping
 		snose[filename] = {'key': remote[0]['key'], 'syncnum': remote[0]['syncnum'], 'version': remote[0]['version'], 'modifydate': remote[0]['modifydate'] }
@@ -87,7 +102,7 @@ def sniff(snclient,key, filename): #How to ensure remote gets or has snose tag?
 		with open('.snose', 'w') as f:
 			json.dump(snose, f, indent=2)
 	except IOError as e:
-		pass
+		print "Failed to update .snose index file"
 
 def sneeze(snclient, key, filename):
 	#place an existing note in current directory
