@@ -61,7 +61,7 @@ def snort(snclient,filename):
 		with open(filename, 'r') as f:
 			content = f.read()
 	except IOError as e:
-		print "Failed to read file "+ filename
+		print "Failed to read file %s" % filename
 		quit()
 	try:
 		returned = snclient.add_note({"content": content, "tags": ["snose"]})
@@ -179,9 +179,9 @@ def sync(snclient, dry=False):
 						snose[name]['modifydate'] = os.path.getmtime(name) 
 						success = True
 					except IOError as e:
-						print "Failed to merge content for "+ name
+						print "Failed to merge content for %s" % name
 				if success:
-					print "Merging local content for "+ name
+					print "Merging local content for %s" % name
 				#Update the index file
 				success = False #reset
 				try:
@@ -192,7 +192,7 @@ def sync(snclient, dry=False):
 					print "Failed to update index"
 				#Give some feedback?
 			if dry or success:
-				print "Updated remote version of "+ name
+				print "Updated remote version of %s" % name
 				#For dry run, collect list of "updated remotes" to ignore in local updates
 				if dry: dryremotes.append(name)
 		#Fetch details from Simplenote
@@ -218,7 +218,7 @@ def sync(snclient, dry=False):
 				except IOError as e:
 					pass
 			if (dry and (not (name in dryremotes))) or success:
-				print "Updated local version of "+ name
+				print "Updated local version of %s" % name
 
 
 main()
