@@ -1,5 +1,5 @@
 #!/usr/bin/python
-#snose - 
+#snose - Simplenote Object Synchronisation (Explicit)
 
 import simplejson as json
 from simplenote import Simplenote #Need to install this
@@ -44,8 +44,6 @@ def main():
 	else:
 		print 'No options supplied'
 
-		
-
 
 def snort(snclient,filename): 
 	# Add a new mapping, is actually add a new file
@@ -62,30 +60,33 @@ def snort(snclient,filename):
 			content = f.read()
 	except IOError as e:
 		print "Failed to read file %s" % filename
-		quit()
-	try:
-		returned = snclient.add_note({"content": content, "tags": ["snose"]})
-	except IOError as e:
-		print "Failed to add note to Simplenote"
-		print e
-		quit()
 	else:
-		#Add mapping
-		snose[filename] = {'key': returned[0]['key'], 'syncnum': returned[0]['syncnum'], 'version': returned[0]['version'], 'modifydate': returned[0]['modifydate'] }
-	try:
-		#Write back out
-		with open('.snose', 'w') as f:
-			json.dump(snose, f, indent=2)
-	except IOError as e:
-		print "Failed to update .snose index file"
+		try:
+			returned = snclient.add_note({"content": content, "tags": ["snose"]})
+			print "Imported %s into Simplenote with key %s" % (filename, returned[0]['key'])
+		except IOError as e:
+			print "Failed to add note to Simplenote"
+			print e
+		else:
+			#Add mapping
+			snose[filename] = {'key': returned[0]['key'], 'syncnum': returned[0]['syncnum'], 'version': returned[0]['version'], 'modifydate': returned[0]['modifydate'] }
+			try:
+				#Write back out
+				with open('.snose', 'w') as f:
+					json.dump(snose, f, indent=2)
+			except IOError as e:
+				print "Failed to update .snose index file"
+				#But note was added to Simplenote so?
+				print "But note was successfully imported to Simplenote with key %s. Try sniffing the file" % returned[0]['key']
+
 
 def sniff(snclient,key, filename): #How to ensure remote gets or has snose tag?
 	# Add a new mapping only
-	try: #http://stackoverflow.com/questions/82831/how-do-i-check-if-a-file-exists-using-python#85237
+	try:
 		with open('.snose', 'r') as f:
 			snose = json.load(f)
 	except IOError as e:
-		#Doesn't exist so create new
+		#Assuming doesn't exist so create new
 		snose = {}
 	#Get details about current Simplenote file
 	try:
@@ -94,51 +95,59 @@ def sniff(snclient,key, filename): #How to ensure remote gets or has snose tag?
 	except IOError as e:
 		print "Failed to find that note on Simplenote"
 		print e
-		quit()
-	try:
-		#Add mapping
-		snose[filename] = {'key': remote[0]['key'], 'syncnum': remote[0]['syncnum'], 'version': remote[0]['version'], 'modifydate': remote[0]['modifydate'] }
-		#Write back out
-		with open('.snose', 'w') as f:
-			json.dump(snose, f, indent=2)
-	except IOError as e:
-		print "Failed to update .snose index file"
+	else:
+		try:
+			#Add mapping
+			snose[filename] = {'key': remote[0]['key'], 'syncnum': remote[0]['syncnum'], 'version': remote[0]['version'], 'modifydate': remote[0]['modifydate'] }
+			#Write back out
+			with open('.snose', 'w') as f:
+				json.dump(snose, f, indent=2)
+		except IOError as e:
+			print "Failed to update .snose index file"
+			#Don't need to do anything else)
+
 
 def sneeze(snclient, key, filename):
 	#place an existing note in current directory
-	#Need some UI for getting list of keys
-	#Get remote note
-	remote = snclient.get_note(key)
-	#Add mapping
 	try:
 		with open('.snose', 'r') as f:
 			snose = json.load(f)
 	except IOError as e:
 		#Doesn't exist so create new
 		snose = {}
-	remote = snclient.get_note(key)	
+	#Get remote note
 	try:
-		snose[filename] = {'key': remote[0]['key'], 'syncnum': remote[0]['syncnum'], 'version': remote[0]['version'], 'modifydate': remote[0]['modifydate'] }
-		#Write back out
-		with open('.snose', 'w') as f:
-			json.dump(snose, f, indent=2)
-	except IOError as e:
-		pass
-	#Write file itself
-	try: 
-		with open(filename, 'w') as f:
-			f.write(remote[0]['content'])
-	except IOError as e:
-			pass
-	#Now then, only problem with this is that if sync is called, this will be "modified" and will get synced unnecessarily
-	#Not sure how to get around this? Override the local['modifydate']?? I think so...
-	#but then need to do that after file has written to disk
+		remote = snclient.get_note(key)	
+	except IOerror as e:
+		print "Failed to find that note on Simplenote"
+		print e
+	else:
+		#Add mapping
+		try:
+			snose[filename] = {'key': remote[0]['key'], 'syncnum': remote[0]['syncnum'], 'version': remote[0]['version'], 'modifydate': remote[0]['modifydate'] }
+			#Write back out
+			with open('.snose', 'w') as f:
+				json.dump(snose, f, indent=2)
+		except IOError as e:
+			 print "Failed to update .snose index file"
+			 print "Therefore not attempting to create note locally"
+		else:
+			#Write file itself
+			try: 
+				with open(filename, 'w') as f:
+					f.write(remote[0]['content'])
+			except IOError as e:
+				print "Failed to create local copy of that note"
+				print e
+				print "You will have to manually fix the .snose Index file and remove the entry for %s" % filename
+				#Should try to remove from Index via this programme. Todo.
+
 
 def snot(snclient):
-	#List simplenote notes
+	#List simplenote notes tagged with "snose"
 	notelist = snclient.get_note_list()
 	#That gets list of keys. Then need to iterate through and get first line of text.
-	#This is going to be slow. Perhaps limit to a tag is a good idea
+	#This is going to be slow.
 	print "Key:                                    Note"
 	for note in notelist[0]:
 		if "snose" in note['tags']:
@@ -149,76 +158,90 @@ def snot(snclient):
 
 def sync(snclient, dry=False):
 	#Need to read in mappings and sync those notes.
-	success = False
 	dryremotes = []
 	try:
 		with open('.snose', 'r') as f:
 			snose = json.load(f)
 	except IOError as e:
 		print 'Error reading Index file'
-		exit()
-	#Need to iterate through list.
-	for name, local in snose.iteritems():
-		#First of all check for local modifications
-		if float(os.path.getmtime(name)) > float(local['modifydate']): #ensure full timestamp
-			if not dry:
-			#Update remote
-				with open(name, 'r') as f:
-					content = f.read()
-				returned = snclient.update_note({'key': local['key'], 'version': local['version'], 'content': content })
-				#Get returned metadata
-				snose[name]['syncnum'] = returned[0]['syncnum']
-				snose[name]['version'] = returned[0]['version']
-				snose[name]['modifydate'] = returned[0]['modifydate']
-				#Update local file if merged content
-				if 'content' in returned[0]:
+	else:
+		#Need to iterate through list.
+		for name, local in snose.iteritems():
+			#First of all check for local modifications
+			sysmodifydate = float(os.path.getmtime(name))
+			if sysmodifydate > float(local['modifydate']): #ensure full timestamp
+				if not dry:
+				#Update remote
 					try:
-						with open(name, 'w') as f:
-							f.write(returned[0]['content'])
-						#Override the returned value? As otherwise next sync will immediately update the remote version for no reason.
-						snose[name]['modifydate'] = os.path.getmtime(name) 
-						success = True
+						with open(name, 'r') as f:
+							content = f.read()
 					except IOError as e:
-						print "Failed to merge content for %s" % name
-				if success:
-					print "Merging local content for %s" % name
-				#Update the index file
-				success = False #reset
-				try:
-					with open('.snose', 'w') as f:
-						json.dump(snose, f, indent=2)
-					success = True
-				except IOError as e:
-					print "Failed to update index"
-				#Give some feedback?
-			if dry or success:
-				print "Updated remote version of %s" % name
-				#For dry run, collect list of "updated remotes" to ignore in local updates
-				if dry: dryremotes.append(name)
-		#Fetch details from Simplenote
-		remote = snclient.get_note(local['key'])
-		if remote[0]['syncnum'] > local['syncnum']:
-			if not dry:
-				success = False #reset
-				#update local file contents
-				try: 
-					with open(name, 'w') as f:
-						f.write(remote[0]['content'])
-					#Also update .snose index
-					snose[name]['syncnum'] = remote[0]['syncnum']
-					snose[name]['version'] = remote[0]['version']
-					snose[name]['modifydate'] = os.path.getmtime(name) #As if set remote modify date, local file will immediately appear 'modified'
-					try:
-						with open('.snose', 'w') as f:
-							json.dump(snose, f, indent=2)
-						success = True
-					except IOError as e:
-						print 'Failed to update index'
-					#Some feedback
-				except IOError as e:
-					pass
-			if (dry and (not (name in dryremotes))) or success:
-				print "Updated local version of %s" % name
+						print "Failed to read local note %s" % name
+						print "Skipping synchronisation for this note"
+					else: 
+						try:
+							returned = snclient.update_note({'key': local['key'], 'version': local['version'], 'content': content, 'modifydate': sysmodifydate })
+							print "Updated remote version of %s" % name
+						except IOError as e:
+							print "Failed to update remote verison of local note %s" % name
+						else:
+							#Get returned metadata
+							snose[name]['syncnum'] = returned[0]['syncnum']
+							snose[name]['version'] = returned[0]['version']
+							snose[name]['modifydate'] = sysmodifydate #Use local value to avoid differences in accuracy (decimal places. etc) between local and remote timestamps
+							#Update local file if merged content
+							if 'content' in returned[0]:
+								try:
+									with open(name, 'w') as f:
+										f.write(returned[0]['content'])
+									print "Merged local content for %s" % name
+									#Override the returned value? As otherwise next sync will immediately update the remote version for no reason.
+									snose[name]['modifydate'] = os.path.getmtime(name) 
+								except IOError as e:
+									print "Failed to merge content locally for %s" % name
+									print "Therefore skipping updating the index for this note" #I think this is a good idea?
+							#Update the index file
+							try:
+								with open('.snose', 'w') as f:
+									json.dump(snose, f, indent=2)
+							except IOError as e:
+								print "Failed to update index for changes regarding local file %s" % name
+								print "But remote and local copy of the file itself have been updated."
+								#What now? I don't know.
+				elif dry:
+					print "Updated remote version of %s" % name
+					#For dry run, collect list of "updated remotes" to ignore in local updates
+					dryremotes.append(name)
+			#Fetch details from Simplenote
+			try:
+				remote = snclient.get_note(local['key'])
+			except IOError as e:
+				print "Failed to fetch remote copy of note %s" % name
+				print "Skipping synchronisation for this file"
+			else:
+				if remote[0]['syncnum'] > local['syncnum']:
+					if not dry:
+						try: 
+							with open(name, 'w') as f:
+								f.write(remote[0]['content'])
+							print "Updated local version of %s" % name
+						except IOError as e:
+							print "Failed to update local note %s with remote content" % name
+							print "Will not updatet the .snose index file for this file"
+						else:
+							#Also update .snose index
+							snose[name]['syncnum'] = remote[0]['syncnum']
+							snose[name]['version'] = remote[0]['version']
+							snose[name]['modifydate'] = os.path.getmtime(name) #As if set remote modify date, local file will immediately appear 'modified'
+							try:
+								with open('.snose', 'w') as f:
+									json.dump(snose, f, indent=2)
+							except IOError as e:
+								print "Failed to update index"
+								print "But local copy of the file %s has been updated with remote changes" % name
+							#Some feedback
+					elif (dry and (not (name in dryremotes))):
+						print "Updated local version of %s" % name
 
 
 main()
