@@ -69,7 +69,7 @@ def snort(snclient,filename):
 			print e
 		else:
 			#Add mapping
-			snose[filename] = {'key': returned[0]['key'], 'syncnum': returned[0]['syncnum'], 'version': returned[0]['version'], 'modifydate': returned[0]['modifydate'] }
+			snose[filename] = {'key': returned[0]['key'], 'syncnum': returned[0]['syncnum'], 'version': returned[0]['version'], 'modifydate': float(os.path.getmtime(filename)) } #Use actual file mod date
 			try:
 				#Write back out
 				with open('.snose', 'w') as f:
@@ -98,7 +98,7 @@ def sniff(snclient,key, filename): #How to ensure remote gets or has snose tag?
 	else:
 		try:
 			#Add mapping
-			snose[filename] = {'key': remote[0]['key'], 'syncnum': remote[0]['syncnum'], 'version': remote[0]['version'], 'modifydate': remote[0]['modifydate'] }
+			snose[filename] = {'key': remote[0]['key'], 'syncnum': remote[0]['syncnum'], 'version': remote[0]['version'], 'modifydate': float(os.path.getmtime(filename)) }
 			#Write back out
 			with open('.snose', 'w') as f:
 				json.dump(snose, f, indent=2)
@@ -122,25 +122,23 @@ def sneeze(snclient, key, filename):
 		print "Failed to find that note on Simplenote"
 		print e
 	else:
-		#Add mapping
-		try:
-			snose[filename] = {'key': remote[0]['key'], 'syncnum': remote[0]['syncnum'], 'version': remote[0]['version'], 'modifydate': remote[0]['modifydate'] }
-			#Write back out
-			with open('.snose', 'w') as f:
-				json.dump(snose, f, indent=2)
+		#Write file
+		try: 
+			with open(filename, 'w') as f:
+				f.write(remote[0]['content'])
 		except IOError as e:
-			 print "Failed to update .snose index file"
-			 print "Therefore not attempting to create note locally"
+			print "Failed to create local copy of that note"
+			print e
 		else:
-			#Write file itself
-			try: 
-				with open(filename, 'w') as f:
-					f.write(remote[0]['content'])
+			#Update index
+			try:
+				snose[filename] = {'key': remote[0]['key'], 'syncnum': remote[0]['syncnum'], 'version': remote[0]['version'], 'modifydate': float(os.path.getmtime(filename)) } #Need to set as local modified date as otherwise will want to sync it straight away.
+				#Write back out
+				with open('.snose', 'w') as f:
+					json.dump(snose, f, indent=2)
 			except IOError as e:
-				print "Failed to create local copy of that note"
-				print e
-				print "You will have to manually fix the .snose Index file and remove the entry for %s" % filename
-				#Should try to remove from Index via this programme. Todo.
+				 print "Failed to update .snose index file"
+				 print "But note was created locally. Try sniffing the file to add it to the index."
 
 
 def snot(snclient):
