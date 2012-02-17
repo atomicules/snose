@@ -79,10 +79,8 @@ It then just implements the Simplenote recommendation from the api:
 ##To Do
 
 - Files in subdirectories, what happens there? I've just assumed all files in same directory as index
-- <s>Ability to pass a flag to explicitly set a version on Simplenote? If API supports this.</s> It doesn't, poop! Simplenote determines these itself.
 - Using tags to contain filename: "filename:pants.txt" Some potential character limitations though? But an interesting idea for meta data.
 - Add ability to "snort" multiple files"
 - List files currently being synchronised (read the .snose index). The `--snot` lists files tagged *snose* on Simplenote and the two might not necessarily be the same (i.e you've chose to sync some files on one machine and a different set on another).
-- Do I need to send modifydate? Only effects sort order....
 - Write updated index file once after sync, instead of writing for each file change (although writing per file does have it's advantage from an error handling point of view)
-- Dry run can't indicate merged content? At least I don't think there is a way. As far as I can tell the only way to know (for sure) if merging has occurred is if updating a note also returns content. 
+ 
