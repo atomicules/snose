@@ -21,7 +21,7 @@ Basically I wanted a way to synchronise arbitrary "dotfiles" without the "expens
 
 Probably the best way is just to supply your username and password like so:
 
-    snose.py --username=me@email.com --password=mypassword
+    python snose.py --username=me@email.com --password=mypassword
 
 In theory snose also supports having your password in plain text (in json format) in a file called `.snoseauth`. But I haven't actually got around to testing this yet. Or thought of a token based approach as I'd need to modify simplenote.py.
 
@@ -29,13 +29,13 @@ In theory snose also supports having your password in plain text (in json format
 
 Take a file from the current directory and import into Simplenote as a new note:
 
-    snose.py --username=<me@email.com> --password=<mypassword> --snort=<filename.ext>
+    python snose.py --username=<me@email.com> --password=<mypassword> --snort=<filename.ext>
 
 ###Sniff - Importing an existing file
 
 Take a file from the current directory and "match" it to an existing note within Simplenote
 
-    snose.py  --username=<me@email.com> --password=<mypassword> --sniff=<key> <filename.ext>
+    python snose.py  --username=<me@email.com> --password=<mypassword> --sniff=<key> <filename.ext>
 
 Where key is the id used by Simplenote to identify the note. So the best way to find this is to make sure the noted is tagged as "snose" in Simplenote and then you can use `snose.py --snot` to find the key.
 
@@ -43,24 +43,24 @@ Where key is the id used by Simplenote to identify the note. So the best way to 
 
 Export a file from Simplenote to the current directory.
 
-    snose.py  --username=<me@email.com> --password=<mypassword> --sneeze=<key> <filename.ext>
+    python snose.py  --username=<me@email.com> --password=<mypassword> --sneeze=<key> <filename.ext>
 
 ###Sync - Synchronise files
 
 Reads files in the `.snose` index file and synchronises them with Simplenote. 
     
-	snose.py  --username=<me@email.com> --password=<mypassword> --sync
+	python snose.py  --username=<me@email.com> --password=<mypassword> --sync
 
 You can pass the optional `--hanky` flag at the same time to perform a dry run; although the dry run can't indicate when merging will occur, only the ultimate direction of the update.
 
-    snose.py  --username=<me@email.com> --password=<mypassword> --sync --hanky
+    python snose.py  --username=<me@email.com> --password=<mypassword> --sync --hanky
 
 
 ###Snot - List files available for synchronisation with SNose
 
 Lists all files on Simplenote tagged "snose":
 
-    snose.py  --username=<me@email.com> --password=<mypassword> --snot
+    python snose.py  --username=<me@email.com> --password=<mypassword> --snot
 
 I could do with making this also list what is currently being synchronised based on the index. 
 
