@@ -23,13 +23,22 @@ Probably the best way is just to supply your username and password like so:
 
     python snose.py --username=me@email.com --password=mypassword
 
-In theory snose also supports having your password in plain text (in json format) in a file called `.snoseauth`. But I haven't actually got around to testing this yet. Or thought of a token based approach as I'd need to modify simplenote.py.
+But it also supports having your username and password in plain text (in json format) in a file called `.snoseauth`, like so:
+
+    { 
+      "username":"me@domain.com",
+      "password":"reallygoodpassword"
+    }
+
+A token based approach would be nice, but for that I'd need to modify simplenote.py.
 
 ###Snort - Importing a new file
 
 Take a file from the current directory and import into Simplenote as a new note:
 
     python snose.py --username=<me@email.com> --password=<mypassword> --snort=<filename.ext>
+    
+Note that snose works with with files in subdirectories as well, etc. The only issue I could see there would be cross-platform. I.e. path differences between Windows and *Nix.
 
 ###Sniff - Importing an existing file
 
@@ -78,7 +87,7 @@ It then just implements the Simplenote recommendation from the api:
 
 ##To Do
 
-- Files in subdirectories, what happens there? I've just assumed all files in same directory as index
+- <s>Files in subdirectories, what happens there? I've just assumed all files in same directory as index</s> They work just fine! However, robust cross-platform support would be nice to handle/interpret file path differences between platforms.
 - Using tags to contain filename: "filename:pants.txt" Some potential character limitations though? But an interesting idea for meta data.
 - Add ability to "snort" multiple files"
 - List files currently being synchronised (read the .snose index). The `--snot` lists files tagged *snose* on Simplenote and the two might not necessarily be the same (i.e you've chose to sync some files on one machine and a different set on another).
