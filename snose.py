@@ -146,12 +146,12 @@ def snot(snclient):
 	notelist = snclient.get_note_list()
 	#That gets list of keys. Then need to iterate through and get first line of text.
 	#This is going to be slow.
-	print "Key:                                    Note"
+	print "Key:                               \tNote"
 	for note in notelist[0]:
-		if "snose" in note['tags']:
+		if ("snose" in note['tags']) & (int(note['deleted']) != 1):
 			#get note itself
 			remote = snclient.get_note(note['key'])
-			print remote[0]['key']  + "  " + remote[0]['content'].splitlines()[0]
+			print remote[0]['key']  + " \t" + remote[0]['content'].splitlines()[0]
 
 
 def sync(snclient, dry=False):
