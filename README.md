@@ -19,16 +19,9 @@ Basically I wanted a way to synchronise arbitrary "dotfiles" without the "expens
 
 ###In general - Authentication
 
-Probably the best way is just to supply your username and password like so:
+Probably the best way is to store your credentials in `.netrc` with a `machine` of host "simple-note.appspot.com" and using the `login` and `password` entries. But you can also provide the username and password on the command line like so:
 
     python snose.py --username=me@email.com --password=mypassword
-
-But it also supports having your username and password in plain text (in json format) in a file called `.snoseauth`, like so:
-
-    { 
-      "username":"me@domain.com",
-      "password":"reallygoodpassword"
-    }
 
 A token based approach would be nice, but for that I'd need to modify simplenote.py.
 

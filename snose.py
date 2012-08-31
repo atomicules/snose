@@ -5,6 +5,7 @@ import simplejson as json
 from simplenote import Simplenote #Need to install this
 import os.path, time
 from optparse import OptionParser
+import netrc
 
 def main():
 	parser = OptionParser()
@@ -21,12 +22,10 @@ def main():
 	if not options.username or not options.password:
 		#Check to see if stored somewhere
 		try:
-			with open(os.path.join(os.path.expanduser('~'), '.snoseauth'), 'r') as f:
-				auth = json.load(f)
-			options.username = auth['username']
-			options.password = auth['password']
+			options.username = netrc.netrc().authenticators("simple-note.appspot.com")[0]
+			options.password = netrc.netrc().authenticators("simple-note.appspot.com")[2]
 		except IOError as e:
-			print 'Username and password must be supplied or exist in json form in a file called .snoseauth in your home directory'
+			print 'Username and password must be supplied or exist .netrc file under domain of simple-note.appspot.com'
 			exit()
 	snclient = Simplenote(options.username, options.password)
 	if options.snort:
