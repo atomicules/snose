@@ -64,7 +64,7 @@ Lists all files on Simplenote tagged "snose":
 
     python snose.py  --username=<me@email.com> --password=<mypassword> --snot
 
-I could do with making this also list what is currently being synchronised based on the index. 
+I could do with making this also list what is currently being synchronised based on the index. To make this most useful I suggest including the name of the file as a comment in the first line of the file. 
 
 ##How it works
 
