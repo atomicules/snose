@@ -31,7 +31,7 @@ Take a file from the current directory and import into Simplenote as a new note:
 
     python snose.py --username=<me@email.com> --password=<mypassword> --snort=<filename.ext>
     
-Note that snose works with with files in subdirectories as well, etc. The only issue I could see there would be cross-platform. I.e. path differences between Windows and *Nix.
+Note that snose works with with files in subdirectories as well, etc. The only issue I could see there would be cross-platform. I.e. path differences between Windows and \*Nix.
 
 ###Sniff - Importing an existing file
 
@@ -66,6 +66,17 @@ Lists all files on Simplenote tagged "snose":
 
 I could do with making this also list what is currently being synchronised based on the index. To make this most useful I suggest including the name of the file as a comment in the first line of the file. 
 
+###Blow - Rollback to the previous version of a note
+
+(Yeah, the command names are getting a bit rubbish now)
+
+Rolls back a note both locally and remotely to the previous version. 
+
+    python snose.py --username=<me@email.com> --password=<mypassword> --blow=<key>
+
+The `blow` command requires Simplenote.py to be at [this commit](https://github.com/mrtazz/simplenote.py/commit/50e3de947b70fa5d9a7faee004ae20b169a1547d) at least.
+
+	
 ##How it works
 
 It's really quite simple (after all, I've done it), basically it creates a `.snose` file in the current directory that is json formatted. This is basically a Python dictionary that maps a filename (from the current directory) to a simplenote note (via the key) and also includes other simplenote data such as the modification date, version number and sync number (so it can figure out how to sync).

@@ -9,9 +9,10 @@ import netrc
 
 def main():
 	parser = OptionParser()
-	parser.add_option("--snort", action="store", type="string", help="Import a new file to Simplenote")
+	parser.add_option("--snort", action="store", type="string", help="Import a new file SNORT to Simplenote")
 	parser.add_option("--sniff", action="store", nargs=2, type="string", help="Link a file with an already existing note in  Simplenote", metavar="<key> <filename>")
 	parser.add_option("--sneeze", action="store", nargs=2, type="string", help="Export an existing file from Simplenote", metavar="<key> <filename>")
+	parser.add_option("--blow", action="store", type="string", help="Roll back note of key BLOW to previous version")
 	parser.add_option("--sync", help="Sync files in index", default=False, action='store_true')
 	parser.add_option("--hanky", help="Use with --sync to perform a dry run", default=False, action='store_true')
 	parser.add_option("--snot", help="List notes available for export (tagged snose)", default=False, action='store_true')
@@ -34,6 +35,8 @@ def main():
 		sniff(snclient, options.sniff[0], options.sniff[1])
 	elif options.sneeze:
 		sneeze(snclient, options.sneeze[0], options.sneeze[1])
+	elif options.blow:
+		blow(snclient, options.blow)
 	elif options.snot:
 		snot(snclient)
 	elif options.sync and options.hanky:
@@ -138,6 +141,73 @@ def sneeze(snclient, key, filename):
 			except IOError as e:
 				 print "Failed to update .snose index file"
 				 print "But note was created locally. Try sniffing the file to add it to the index."
+
+
+def blow(snclient, key):
+	#With given key from .snose file, roll back to the previous version
+
+	#1) Check exists in .snose index
+	#2) Get previous version of remote
+	#3) Write it out locally
+	#4) Use that to update remote
+	#5) Update index file with results
+
+	#1) Check exists in .snose index
+	try:
+		with open('.snose', 'r') as f:
+			snose = json.load(f)
+		#Need to get filename of note, loop through, performance should be fine as .snose likely to be small
+		filename = [name for name, local in snose.iteritems() if local['key'] == key][0]
+		print "Attempting to rollback file %s" % filename
+	except IOError as e:
+		print "Note doesn't exist in local .snose index"
+	else:
+		#2) Get previous version of remote
+		try:
+			#fetch once to know version
+			remote = snclient.get_note(key)
+			rollback = snclient.get_note(key, remote[0]['version']-1)
+		except IOError as e:
+			print "Failed to fetch previous version"
+		else:
+			try: 
+				#3) Write it out locally
+				with open(filename, 'w') as f:
+					f.write(rollback[0]['content'])
+				print "Rolled back local copy"
+			except IOError as e:
+				print "Failed to rollback local copy of that note"
+				print e
+			else:
+				#Since rollback doesn't include full meta data, update remote accordingly
+				try:
+					del remote[0]['syncnum']
+					del remote[0]['version']
+				except KeyError:
+					pass
+				finally:
+					#Set modified date
+					sysmodifydate = float(os.path.getmtime(filename))
+					remote[0]['modifydate'] = sysmodifydate
+					remote[0]['content'] = rollback[0]['content']
+					#4) Use that to update remote
+					try:
+						returned = snclient.update_note(remote[0])
+						print "Rolled back remote version"
+					except IOError as e:
+						print "Failed to roll back remote version"
+					else:
+						#Get returned metadata
+						snose[filename]['syncnum'] = returned[0]['syncnum']
+						snose[filename]['version'] = returned[0]['version']
+						snose[filename]['modifydate'] = sysmodifydate
+						try:
+							#5) Update index file with results
+							with open('.snose', 'w') as f:
+								json.dump(snose, f, indent=2)
+						except IOError as e:
+							 print "Failed to update .snose index file"
+							 print "Try running a sync to get index corrected."
 
 
 def snot(snclient):
