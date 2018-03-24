@@ -93,7 +93,7 @@ It then just implements the Simplenote recommendation from the api:
 
 - <s>Files in subdirectories, what happens there? I've just assumed all files in same directory as index</s> They work just fine! However, robust cross-platform support would be nice to handle/interpret file path differences between platforms.
 - Using tags to contain filename: "filename:pants.txt" Some potential character limitations though? But an interesting idea for meta data.
-- Add ability to "snort" multiple files"
+- Add ability to "snort" multiple files
 - List files currently being synchronised (read the .snose index). The `--snot` lists files tagged *snose* on Simplenote and the two might not necessarily be the same (i.e you've chose to sync some files on one machine and a different set on another).
 - Write updated index file once after sync, instead of writing for each file change (although writing per file does have it's advantage from an error handling point of view)
  
